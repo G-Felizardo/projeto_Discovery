@@ -1,0 +1,38 @@
+# Arquivo: implantar_firewall_vnf.yml
+# Descrição: Playbook Ansible para implantação automática de VNF de Firewall
+# Requer acesso ao controlador NFV (ex: Open Baton) via linha de comando
+
+- name: Implantar VNF de Firewall no Ambiente NFV
+  hosts: controlador_nfv   # Grupo de hosts onde o orquestrador NFV está instalado
+  become: yes              # Executar com privilégios elevados (sudo)
+
+  vars:
+    vnf_image: "firewall_vnf.qcow2"   # Imagem pré-configurada da VNF
+    vnf_name: "firewall-edu"          # Nome identificador único da instância da VNF
+
+  tasks:
+
+    - name: Verificar status do serviço Open Baton
+      shell: "systemctl status openbaton"
+      register: status
+      ignore_errors: yes
+      # Registra o resultado para uso posterior na condição 'when'
+
+    - name: Iniciar Open Baton se estiver parado
+      shell: "systemctl start openbaton"
+      when: "'inactive' in status.stdout"
+      # Apenas inicia o serviço se ele não estiver ativo
+
+    - name: Carregar imagem da VNF no repositório NFV
+      shell: "openbaton vnfd-create {{ vnf_image }}"
+      args:
+        chdir: "/opt/nfv/images/"     # Diretório onde a imagem está armazenada
+      # Este passo registra a definição da VNF no orquestrador
+
+    - name: Criar instância da VNF no ambiente
+      shell: "openbaton vnf-create {{ vnf_name }}"
+      # Cria uma nova instância da VNF registrada anteriormente
+
+    - name: Associar VNF ao serviço de rede (NSD)
+      shell: "openbaton nsd-add-vnf {{ vnf_name }} edu-nsd-001"
+      # Associa a VNF criada ao serviço de rede definido no NSD

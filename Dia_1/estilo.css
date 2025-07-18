@@ -1,0 +1,18 @@
+
+/* AULA 1: Selector seguido de uma propriedade
+body {
+    background: blue;  
+}
+
+body {
+    background: red;  
+} */
+
+/* AULA 2: Selector ID e Class, no inline
+#unico1{
+    color:green;
+}
+
+.qualquer{
+    color:blue;
+} *
